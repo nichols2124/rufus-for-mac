@@ -1,0 +1,90 @@
+name: macOS build & test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.name }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Apple Silicon
+            runner: macos-15
+            arch: arm64
+          - name: Intel
+            runner: macos-15-intel
+            arch: x86_64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the runner's CPU
+        run: |
+          echo "Runner: $(uname -m), $(sysctl -n machdep.cpu.brand_string), macOS $(sw_vers -productVersion)"
+          test "$(uname -m)" = "${{ matrix.arch }}"
+
+      - name: Build (native ${{ matrix.arch }})
+        working-directory: macos
+        run: make -j"$(sysctl -n hw.ncpu)" ARCHS=${{ matrix.arch }} app cli
+
+      - name: Engine tests
+        working-directory: macos
+        run: tests/run-tests.sh
+
+      - name: Launch smoke test
+        working-directory: macos
+        run: |
+          # Start the app with the About dialog open, and make sure it is still alive after a while
+          build/Rufus.app/Contents/MacOS/Rufus -RufusShow about &
+          pid=$!
+          sleep 10
+          if ! kill -0 $pid 2>/dev/null; then
+            echo "Rufus exited or crashed during startup"
+            ls ~/Library/Logs/DiagnosticReports/ 2>/dev/null | grep -i rufus && \
+              cat ~/Library/Logs/DiagnosticReports/Rufus* 2>/dev/null | head -80
+            exit 1
+          fi
+          kill $pid
+          echo "Rufus ran for 10 seconds on ${{ matrix.arch }}"
+          cat ~/Library/Logs/Rufus/rufus.log
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.arch }}
+          path: |
+            ~/Library/Logs/Rufus/
+            ~/Library/Logs/DiagnosticReports/
+          if-no-files-found: ignore
+
+  universal:
+    name: Universal DMG
+    runs-on: macos-15
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build universal app and DMG
+        working-directory: macos
+        run: make -j"$(sysctl -n hw.ncpu)" dmg
+
+      - name: Check architectures
+        working-directory: macos
+        run: |
+          for f in build/Rufus.app/Contents/MacOS/*; do
+            lipo -info "$f"
+            lipo "$f" -verify_arch x86_64 arm64
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rufus-universal-dmg
+          path: macos/build/Rufus-*.dmg
