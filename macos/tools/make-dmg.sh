@@ -20,17 +20,12 @@ mkdir -p "$WORK/stage/.background"
 ditto "$APP" "$WORK/stage/Rufus.app"
 ln -s /Applications "$WORK/stage/Applications"
 cp "$HERE/app/dmg-background.tiff" "$WORK/stage/.background/background.tiff"
-cp "$HERE/app/Rufus.icns" "$WORK/stage/.VolumeIcon.icns"
 
 # Writable image, with some room for Finder's metadata
 hdiutil detach -quiet "/Volumes/$VOLNAME" 2>/dev/null || true
 hdiutil create -quiet -volname "$VOLNAME" -srcfolder "$WORK/stage" -fs HFS+ -format UDRW -ov "$WORK/rw.dmg"
 DEV=$(hdiutil attach -readwrite -noverify -noautoopen "$WORK/rw.dmg" | awk '/Apple_HFS/{print $1}')
 
-# Custom volume icon (SetFile comes with the Command Line Tools)
-if command -v SetFile >/dev/null; then
-	SetFile -a C "/Volumes/$VOLNAME" || true
-fi
 
 # Window layout: 640x400, icons on either side of the background's arrow
 # (perl's alarm: never let a Finder/automation prompt hang the build, e.g. on CI)
@@ -61,6 +56,16 @@ else
 	echo "warning: could not script Finder, the DMG will use the default layout" >&2
 fi
 
+# Custom volume icon. This must come after the Finder step, which otherwise drops it,
+# and hdiutil's -srcfolder skips it, so copy it into the mounted image directly
+# (SetFile, from the Command Line Tools, marks the volume as having a custom icon)
+cp "$HERE/app/Rufus.icns" "/Volumes/$VOLNAME/.VolumeIcon.icns"
+if command -v SetFile >/dev/null; then
+	SetFile -a C "/Volumes/$VOLNAME" || true
+fi
+
+# Don't ship the event log that got created while the image was mounted
+rm -rf "/Volumes/$VOLNAME/.fseventsd"
 sync
 hdiutil detach -quiet "$DEV" || hdiutil detach -force -quiet "$DEV"
 rm -f "$OUT"

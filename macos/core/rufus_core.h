@@ -32,7 +32,7 @@ extern "C" {
 #define CEILING_ALIGN(x, a)  ((((x) + (a) - 1) / (a)) * (a))
 #define FLOOR_ALIGN(x, a)    (((x) / (a)) * (a))
 
-#define RUFUS_MAC_VERSION    "4.15"
+#define RUFUS_MAC_VERSION    "4.15.1"
 
 /* Same enumerations and ordering as the Windows version */
 typedef enum { FS_FAT16 = 0, FS_FAT32, FS_NTFS, FS_UDF, FS_EXFAT, FS_REFS, FS_EXT2, FS_EXT3, FS_EXT4, FS_MAX } fs_type_t;
