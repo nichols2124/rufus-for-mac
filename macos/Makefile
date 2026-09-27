@@ -161,9 +161,9 @@ run: app
 debug: app
 	lldb -o run $(APP)/Contents/MacOS/Rufus
 
+# Installer DMG: Rufus.app next to an Applications shortcut, on a background
 dmg: app
-	rm -f $(OUT)/Rufus-$(VERSION).dmg
-	hdiutil create -volname "Rufus $(VERSION)" -srcfolder $(APP) -ov -format UDZO $(OUT)/Rufus-$(VERSION).dmg
+	tools/make-dmg.sh $(APP) $(OUT)/Rufus-$(VERSION).dmg $(VERSION)
 
 clean:
 	rm -rf $(OUT)
