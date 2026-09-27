@@ -79,7 +79,7 @@ NTFS_LIB    := $(NTFS3G)/lib/libntfs-3g.a
 
 $(NTFS_LIB):
 	cd $(NTFS_SRCDIR) && CFLAGS="$(ARCHFLAGS) -O2" ./configure --disable-dependency-tracking \
-		--disable-ntfs-3g --disable-shared --enable-static --disable-crypto --disable-plugins \
+		--disable-ntfs-3g --disable-shared --enable-static --disable-crypto --disable-plugins --disable-nls \
 		--without-uuid --without-hd --prefix=$(abspath $(NTFS3G)) >/dev/null
 	$(MAKE) -C $(NTFS_SRCDIR)/libntfs-3g clean >/dev/null   # it builds in-tree: drop other archs' objects
 	$(MAKE) -C $(NTFS_SRCDIR)/libntfs-3g
