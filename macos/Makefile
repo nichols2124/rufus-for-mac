@@ -78,8 +78,10 @@ NTFS_SRCDIR := third_party/ntfs-3g-2026.9.18
 NTFS_LIB    := $(NTFS3G)/lib/libntfs-3g.a
 
 $(NTFS_LIB):
-	cd $(NTFS_SRCDIR) && CFLAGS="$(ARCHFLAGS) -O2" ./configure --disable-dependency-tracking \
-		--disable-ntfs-3g --disable-shared --enable-static --disable-crypto --disable-plugins --disable-nls \
+	@# ac_cv_header_libintl_h=no: never pick up a libintl.h from /usr/local (e.g. Homebrew's gettext),
+	@# which would redirect setlocale() to a libintl we don't bundle
+	cd $(NTFS_SRCDIR) && CFLAGS="$(ARCHFLAGS) -O2" ac_cv_header_libintl_h=no ./configure --disable-dependency-tracking \
+		--disable-ntfs-3g --disable-shared --enable-static --disable-crypto --disable-plugins \
 		--without-uuid --without-hd --prefix=$(abspath $(NTFS3G)) >/dev/null
 	$(MAKE) -C $(NTFS_SRCDIR)/libntfs-3g clean >/dev/null   # it builds in-tree: drop other archs' objects
 	$(MAKE) -C $(NTFS_SRCDIR)/libntfs-3g
