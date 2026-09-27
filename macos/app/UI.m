@@ -22,8 +22,10 @@ BOOL UIHasLiquidGlass(void)
 {
 	if ([[NSUserDefaults standardUserDefaults] boolForKey:@"ForceLegacyUI"])
 		return NO;
+#if RUFUS_GLASS_SDK
 	if (@available(macOS 26.0, *))
 		return NSClassFromString(@"NSGlassEffectView") != nil;
+#endif
 	return NO;
 }
 
@@ -40,6 +42,7 @@ void UIGlassifyWindow(NSWindow* w)
 {
 	if (!UIGlassWindowsEnabled() || w == nil || [w.contentView isKindOfClass:NSClassFromString(@"NSGlassEffectView")])
 		return;
+#if RUFUS_GLASS_SDK
 	if (@available(macOS 26.0, *)) {
 		NSView* old = w.contentView;
 		NSRect frame = w.frame;
@@ -62,6 +65,7 @@ void UIGlassifyWindow(NSWindow* w)
 		g.contentView = holder;
 		w.contentView = g;
 	}
+#endif
 }
 
 /* NSAlert uses Auto Layout and re-runs its layout when shown, so its views must never
@@ -71,6 +75,7 @@ static void UIGlassBackdrop(NSWindow* w)
 {
 	if (!UIGlassWindowsEnabled() || w == nil)
 		return;
+#if RUFUS_GLASS_SDK
 	if (@available(macOS 26.0, *)) {
 		NSView* cv = w.contentView;
 		for (NSView* v in cv.subviews)
@@ -84,6 +89,7 @@ static void UIGlassBackdrop(NSWindow* w)
 		g.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 		[cv addSubview:g positioned:NSWindowBelow relativeTo:nil];
 	}
+#endif
 }
 
 @implementation GlassAlert
@@ -137,10 +143,12 @@ NSButton* UICheckbox(NSString* title, id target, SEL action)
 void UIApplyGlassBezel(NSButton* button)
 {
 	button.bezelStyle = NSBezelStyleRounded;
+#if RUFUS_GLASS_SDK
 	if (@available(macOS 26.0, *)) {
 		if (UIHasLiquidGlass())
 			button.bezelStyle = NSBezelStyleGlass;
 	}
+#endif
 }
 
 NSButton* UIIconButton(NSString* symbol, NSString* fallback, NSString* tooltip, id target, SEL action)
@@ -149,10 +157,12 @@ NSButton* UIIconButton(NSString* symbol, NSString* fallback, NSString* tooltip, 
 	NSButton* b = (img != nil) ? [NSButton buttonWithImage:img target:target action:action] :
 		[NSButton buttonWithTitle:fallback target:target action:action];
 	UIApplyGlassBezel(b);
+#if RUFUS_GLASS_SDK
 	if (@available(macOS 26.0, *)) {
 		if (UIHasLiquidGlass())
 			b.borderShape = NSControlBorderShapeCircle;
 	}
+#endif
 	b.toolTip = tooltip;
 	b.imagePosition = NSImageOnly;
 	return b;
@@ -169,6 +179,7 @@ NSPopUpButton* UIPopup(id target, SEL action)
 
 NSView* UIGlassContainer(NSView* content, CGFloat cornerRadius)
 {
+#if RUFUS_GLASS_SDK
 	if (@available(macOS 26.0, *)) {
 		if (UIHasLiquidGlass()) {
 		NSGlassEffectView* glass = [[NSGlassEffectView alloc] initWithFrame:content.frame];
@@ -177,6 +188,7 @@ NSView* UIGlassContainer(NSView* content, CGFloat cornerRadius)
 		return glass;
 		}
 	}
+#endif
 	NSVisualEffectView* v = [[NSVisualEffectView alloc] initWithFrame:content.frame];
 	v.material = NSVisualEffectMaterialHeaderView;
 	v.blendingMode = NSVisualEffectBlendingModeWithinWindow;

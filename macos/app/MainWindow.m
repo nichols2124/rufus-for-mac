@@ -150,6 +150,7 @@ static void progress_to_ui(const char* status, double pct)
 {
 	content = [[FlippedView alloc] initWithFrame:NSMakeRect(0, 0, WIDTH, 600)];
 	if (glassWindow) {
+#if RUFUS_GLASS_SDK
 		if (@available(macOS 26.0, *)) {
 			/* One glass pane for the whole window, gently tinted with the user's accent color */
 			NSGlassEffectView* g = [[NSGlassEffectView alloc] initWithFrame:content.frame];
@@ -159,6 +160,7 @@ static void progress_to_ui(const char* status, double pct)
 			windowGlass = g;
 			self.window.contentView = g;
 		}
+#endif
 	} else {
 		self.window.contentView = content;
 	}

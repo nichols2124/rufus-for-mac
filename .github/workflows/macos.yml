@@ -16,14 +16,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Apple Silicon: newest Xcode 26 (Liquid Glass SDK), like the release
           - name: Apple Silicon
             runner: macos-15
             arch: arm64
+            xcode: latest
+          # Intel: the runner's default Xcode, which also proves the pre-macOS 26 SDK fallback builds
           - name: Intel
             runner: macos-15-intel
             arch: x86_64
+            xcode: default
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ "${{ matrix.xcode || 'latest' }}" = "latest" ]; then
+            X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$X" ]; then sudo xcode-select -s "$X"; else echo "::warning::No Xcode 26 on this runner, building without Liquid Glass"; fi
+          fi
+          xcodebuild -version
+          echo "SDK: $(xcrun --show-sdk-version)"
 
       - name: Check the runner's CPU
         run: |
@@ -71,6 +84,15 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          if [ "latest" = "latest" ]; then
+            X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+            if [ -n "$X" ]; then sudo xcode-select -s "$X"; else echo "::warning::No Xcode 26 on this runner, building without Liquid Glass"; fi
+          fi
+          xcodebuild -version
+          echo "SDK: $(xcrun --show-sdk-version)"
 
       - name: Build universal app and DMG
         working-directory: macos

@@ -5,6 +5,14 @@
  */
 #import <Cocoa/Cocoa.h>
 
+/* Liquid Glass APIs only exist in the macOS 26 SDK. Built with an older SDK,
+ * the app simply uses its classic (pre-macOS 26) look everywhere. */
+#if defined(__MAC_26_0)
+#define RUFUS_GLASS_SDK 1
+#else
+#define RUFUS_GLASS_SDK 0
+#endif
+
 /* A view with a top-left origin, which makes Rufus' dialog layout easier to port */
 @interface FlippedView : NSView
 @end
