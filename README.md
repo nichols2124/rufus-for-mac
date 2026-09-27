@@ -3,26 +3,18 @@
 # Rufus for Mac (claude code slop)
 
 A native macOS port of [Rufus](https://rufus.ie), the utility that creates bootable USB drives from
-ISO and disk images. It keeps the exact layout of Windows Rufus, dressed in Apple's Liquid Glass.
+ISO and disk images.
 
 <p align="center"><img src="docs/screenshots/main.png" width="420" alt="Rufus for Mac main window"></p>
 
 ## Download
 
-Get the latest **[Rufus-&lt;version&gt;-universal.dmg](https://github.com/nichols2124/rufus-for-mac/releases/latest)**
+Get the latest **[Rufus-universal.dmg](https://github.com/nichols2124/rufus-for-mac/releases/latest)**
 from the Releases page. It's a universal app (Intel + Apple Silicon): open the DMG and drag Rufus to
 Applications. Each release also has a `SHA256SUMS.txt` to verify the download
 (`shasum -a 256 -c SHA256SUMS.txt`). Rufus checks this page for updates (⚙ Settings → Check for updates).
 
-Requires **macOS 10.15 Catalina or later**. The app is ad-hoc signed, not notarized, so the first
-time you open it, right-click Rufus.app → **Open**. On macOS 15+, go to **System Settings → Privacy &
-Security → Open Anyway**. Or clear the quarantine flag:
-
-```sh
-xattr -dr com.apple.quarantine /Applications/Rufus.app
-```
-
-Nothing else needs to be installed: NTFS support (ntfs-3g) is bundled, no macFUSE or MacPorts needed.
+Requires **macOS 10.15 Catalina or later**.
 
 ## Features
 
