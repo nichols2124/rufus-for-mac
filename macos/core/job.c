@@ -314,8 +314,11 @@ int run_job(rdev_t* dev, const job_options_t* o)
 	if (o->archive_path != NULL && !sink_copy_archive(sink, o->archive_path))
 		uprintf("WARNING: Could not copy additional files");
 
-	update_status("Finalizing, please wait...");
-	update_progress(-1);
+	/* With NTFS, the last cached data is written out now: keep showing real progress for it */
+	if (!extract_iso_uses_device_progress()) {
+		update_status("Finalizing, please wait...");
+		update_progress(-1);
+	}
 	if (!sink->unmount(sink)) {
 		sink = NULL;
 		goto out;
@@ -326,6 +329,7 @@ int run_job(rdev_t* dev, const job_options_t* o)
 out:
 	if (sink != NULL)
 		sink->unmount(sink);
+	extract_iso_progress_done();
 	free(uefi_ntfs);
 	rdev_sync(dev);
 	if (ok) {

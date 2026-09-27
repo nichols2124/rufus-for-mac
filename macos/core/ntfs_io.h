@@ -14,4 +14,7 @@
 struct ntfs_device_operations;
 extern struct ntfs_device_operations rufus_ntfs_io_ops;
 
+/* Called with the size of every write that actually reaches the device (for progress reporting) */
+extern void (*ntfs_io_write_hook)(uint64_t bytes);
+
 bool rufus_ntfs_parse_name(const char* name, int* fd, uint64_t* offset, uint64_t* size, uint32_t* ss);

@@ -92,3 +92,4 @@ macos/third_party/ntfs-3g-*/**/.deps/
 macos/third_party/ntfs-3g-*/libntfs-3g/libntfs-3g.pc
 macos/third_party/ntfs-3g-*/libntfs-3g/libntfs-3g.script.so
 macos/third_party/ntfs-3g-*/src/ntfs-3g.probe
+macos/third_party/ntfs-3g-*/**/*.8

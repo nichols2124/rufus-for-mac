@@ -25,6 +25,7 @@
 #include <cdio/udf.h>
 
 #include "rufus_core.h"
+#include "ntfs_io.h"
 
 #define ISO_BUFFER_SIZE     (64 * 1024)
 #define MAX_CFG_SIZE        (1 * 1024 * 1024)
@@ -346,10 +347,38 @@ static bool is_config_file(const char* dirname, const char* basename)
 /* ------------------------------------------------------------------------ */
 typedef int64_t (*block_reader_t)(void* ctx, uint8_t* buf, uint64_t offset, size_t blocks);
 
+/*
+ * On NTFS, files go through a large write cache (see ntfs_io.c), which takes in
+ * hundreds of MB instantly and then writes them out in one go. Counting progress
+ * as files are handed over made the bar jump and then stall, so for NTFS the
+ * progress counts the bytes that actually reach the drive instead. That also
+ * covers the final flush, so 100% means the data is on the drive.
+ */
+static bool device_progress;
+static uint64_t device_done;
+
+static void device_write_hook(uint64_t n)
+{
+	device_done += n;
+	update_progress_bytes(NULL, (device_done < total_bytes) ? device_done : total_bytes, total_bytes);
+}
+
 static void report_progress(uint64_t n)
 {
 	done_bytes += n;
-	update_progress_bytes(NULL, done_bytes, total_bytes);
+	if (!device_progress)
+		update_progress_bytes(NULL, done_bytes, total_bytes);
+}
+
+bool extract_iso_uses_device_progress(void)
+{
+	return device_progress;
+}
+
+void extract_iso_progress_done(void)
+{
+	ntfs_io_write_hook = NULL;
+	device_progress = false;
 }
 
 /* Write a file from a reader callback into the sink, with config patching */
@@ -783,6 +812,9 @@ bool extract_iso(const char* iso_path, const image_report_t* report, sink_t* sin
 	rep = &dummy;
 	total_bytes = report->projected_size;
 	done_bytes = 0;
+	device_progress = (fs == FS_NTFS);
+	device_done = 0;
+	ntfs_io_write_hook = device_progress ? device_write_hook : NULL;
 	snprintf(usb_label, sizeof(usb_label), "%s", report->label);
 	to_valid_label(usb_label, IS_FAT(fs) || fs == FS_EXFAT);
 	cdio_log_set_handler(cdio_log_handler);

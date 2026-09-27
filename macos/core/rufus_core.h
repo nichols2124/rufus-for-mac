@@ -258,6 +258,8 @@ bool sink_copy_archive(sink_t* s, const char* archive_path);
 /* ------------------------------------------------------------------------ */
 bool extract_iso(const char* iso_path, const image_report_t* report, sink_t* sink, fs_type_t fs, bool persistence);
 bool extract_iso_file(const char* iso_path, const char* src, void** buf, size_t* size);
+bool extract_iso_uses_device_progress(void);
+void extract_iso_progress_done(void);
 bool write_mbr(rdev_t* dev, const layout_t* layout, boot_type_t bt, const image_report_t* report,
 	fs_type_t fs, target_t tt, bool use_rufus_mbr);
 bool write_pbr(part_view_t* pv, fs_type_t fs, boot_type_t bt, const image_report_t* report);

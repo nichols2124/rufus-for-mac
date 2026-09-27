@@ -100,7 +100,19 @@ static uint64_t now_us(void)
 static s64 raw_xfer_impl(rufus_ntfs_dev_t* p, void* buf, s64 count, s64 pos, bool is_write);
 
 /* Sector-aligned transfer (handles unaligned requests with a bounce buffer) */
+void (*ntfs_io_write_hook)(uint64_t bytes) = NULL;
+
+static s64 raw_xfer_traced(rufus_ntfs_dev_t* p, void* buf, s64 count, s64 pos, bool is_write);
+
 static s64 raw_xfer(rufus_ntfs_dev_t* p, void* buf, s64 count, s64 pos, bool is_write)
+{
+	s64 r = raw_xfer_traced(p, buf, count, pos, is_write);
+	if (is_write && r > 0 && ntfs_io_write_hook != NULL)
+		ntfs_io_write_hook((uint64_t)r);
+	return r;
+}
+
+static s64 raw_xfer_traced(rufus_ntfs_dev_t* p, void* buf, s64 count, s64 pos, bool is_write)
 {
 	uint64_t t0;
 	s64 r;
