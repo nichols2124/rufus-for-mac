@@ -18,7 +18,16 @@ pass=0; fail=0
 ok()   { echo "  PASS  $1"; pass=$((pass + 1)); }
 bad()  { echo "  FAIL  $1"; fail=$((fail + 1)); }
 check(){ if eval "$2"; then ok "$1"; else bad "$1"; fi; }
-attach(){ hdiutil attach -nomount -imagekey diskimage-class=CRawDiskImage "$1" | head -1 | awk '{print $1}'; }
+# Attach an image as a disk, and wait until macOS has registered its partitions
+attach(){
+	local d i
+	d=$(hdiutil attach -nomount -imagekey diskimage-class=CRawDiskImage "$1" | head -1 | awk '{print $1}')
+	for i in 1 2 3 4 5 6 7 8 9 10; do
+		[ -e "${d}s1" ] && break
+		sleep 0.5
+	done
+	echo "$d"
+}
 
 [ -x $CLI ] || { echo "Build the CLI first: make cli"; exit 1; }
 
